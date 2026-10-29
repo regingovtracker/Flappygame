@@ -13,6 +13,7 @@ const PIPE_SPACING = 220;
 const PIPE_SPEED = 2.4;
 
 const bird = { x: 90, y: H / 2, r: 14, vy: 0, rot: 0 };
+const HIT_R = bird.r - 3;
 let pipes = [];
 let score = 0;
 let best = Number(localStorage.getItem("flappy-best") || 0);
@@ -80,8 +81,9 @@ function update() {
   bird.y += bird.vy;
   bird.rot = Math.max(-0.5, Math.min(1.2, bird.vy / 10));
 
-  if (frame % Math.round(PIPE_SPACING / PIPE_SPEED) === 0) {
-    spawnPipe(W + 20);
+  const lastPipe = pipes[pipes.length - 1];
+  if (!lastPipe || lastPipe.x <= W - PIPE_SPACING) {
+    spawnPipe(lastPipe ? lastPipe.x + PIPE_SPACING : W + 40);
   }
 
   for (const p of pipes) {
@@ -93,14 +95,14 @@ function update() {
   }
   pipes = pipes.filter((p) => p.x + PIPE_W > -20);
 
-  if (bird.y - bird.r < 0 || bird.y + bird.r > H - GROUND_H) {
+  if (bird.y - HIT_R < 0 || bird.y + HIT_R > H - GROUND_H) {
     return gameOver();
   }
 
   for (const p of pipes) {
-    const inX = bird.x + bird.r > p.x && bird.x - bird.r < p.x + PIPE_W;
-    const inTop = bird.y - bird.r < p.topH;
-    const inBottom = bird.y + bird.r > p.topH + PIPE_GAP;
+    const inX = bird.x + HIT_R > p.x && bird.x - HIT_R < p.x + PIPE_W;
+    const inTop = bird.y - HIT_R < p.topH;
+    const inBottom = bird.y + HIT_R > p.topH + PIPE_GAP;
     if (inX && (inTop || inBottom)) {
       return gameOver();
     }
