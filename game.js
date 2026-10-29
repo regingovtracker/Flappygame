@@ -33,7 +33,7 @@ function reset() {
   pipes = [];
   score = 0;
   frame = 0;
-  spawnPipe(W + 120);
+  spawnPipe(W + 240);
 }
 
 function spawnPipe(x) {
