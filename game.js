@@ -178,20 +178,20 @@ function drawCat() {
   ctx.translate(cat.x, cat.y);
   ctx.rotate(cat.rot);
 
-  ctx.fillStyle = "#3a3a3a";
+  ctx.fillStyle = "#e8823c";
   ctx.beginPath();
   ctx.ellipse(-r - 2, 2, 5, 3, -0.5, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.fillStyle = "#fff";
-  ctx.strokeStyle = "#b9b9b9";
+  ctx.fillStyle = "#262626";
+  ctx.strokeStyle = "#000";
   ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.arc(0, 0, r, 0, Math.PI * 2);
   ctx.fill();
   ctx.stroke();
 
-  ctx.fillStyle = "#e8823c";
+  ctx.fillStyle = "#262626";
   ctx.beginPath();
   ctx.moveTo(-r + 2, -r + 4);
   ctx.lineTo(-r + 7, -r - 6);
@@ -205,7 +205,7 @@ function drawCat() {
   ctx.closePath();
   ctx.fill();
 
-  ctx.fillStyle = "#3a3a3a";
+  ctx.fillStyle = "#e8823c";
   ctx.beginPath();
   ctx.moveTo(-r + 3, -r + 3);
   ctx.lineTo(-r + 6, -r - 4);
@@ -230,9 +230,14 @@ function drawCat() {
   ctx.beginPath();
   ctx.arc(5, -3, 5, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "#222";
+  ctx.fillStyle = "#111";
   ctx.beginPath();
   ctx.arc(6.5, -3, 2.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#fff";
+  ctx.beginPath();
+  ctx.ellipse(0, 5, 6, 4, 0, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.fillStyle = "#ff9db4";
@@ -243,7 +248,7 @@ function drawCat() {
   ctx.closePath();
   ctx.fill();
 
-  ctx.strokeStyle = "#999";
+  ctx.strokeStyle = "#ddd";
   ctx.lineWidth = 1;
   for (const [sx, sy] of [[-8, 3], [-9, 6], [8, 3], [9, 6]]) {
     ctx.beginPath();
