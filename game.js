@@ -12,13 +12,15 @@ const PIPE_GAP = 150;
 const PIPE_SPACING = 220;
 const PIPE_SPEED = 2.4;
 
-const bird = { x: 90, y: H / 2, r: 14, vy: 0, rot: 0 };
-const HIT_R = bird.r - 3;
+const cat = { x: 90, y: H / 2, r: 14, vy: 0, rot: 0 };
+const HIT_R = cat.r - 3;
 let pipes = [];
 let score = 0;
 let best = Number(localStorage.getItem("flappy-best") || 0);
+let top5 = JSON.parse(localStorage.getItem("flappy-top5") || "[]");
 let state = "ready";
 let frame = 0;
+let newRecord = false;
 let clouds = Array.from({ length: 5 }, () => ({
   x: Math.random() * W,
   y: 40 + Math.random() * 160,
@@ -27,12 +29,13 @@ let clouds = Array.from({ length: 5 }, () => ({
 }));
 
 function reset() {
-  bird.y = H / 2;
-  bird.vy = 0;
-  bird.rot = 0;
+  cat.y = H / 2;
+  cat.vy = 0;
+  cat.rot = 0;
   pipes = [];
   score = 0;
   frame = 0;
+  newRecord = false;
   spawnPipe(W + 240);
 }
 
@@ -45,9 +48,9 @@ function spawnPipe(x) {
 function flap() {
   if (state === "ready") {
     state = "playing";
-    bird.vy = FLAP;
+    cat.vy = FLAP;
   } else if (state === "playing") {
-    bird.vy = FLAP;
+    cat.vy = FLAP;
   } else if (state === "over") {
     reset();
     state = "ready";
@@ -77,9 +80,9 @@ function update() {
 
   if (state !== "playing") return;
 
-  bird.vy += GRAVITY;
-  bird.y += bird.vy;
-  bird.rot = Math.max(-0.5, Math.min(1.2, bird.vy / 10));
+  cat.vy += GRAVITY;
+  cat.y += cat.vy;
+  cat.rot = Math.max(-0.5, Math.min(1.2, cat.vy / 10));
 
   const lastPipe = pipes[pipes.length - 1];
   if (!lastPipe || lastPipe.x <= W - PIPE_SPACING) {
@@ -88,21 +91,21 @@ function update() {
 
   for (const p of pipes) {
     p.x -= PIPE_SPEED;
-    if (!p.scored && p.x + PIPE_W < bird.x) {
+    if (!p.scored && p.x + PIPE_W < cat.x) {
       p.scored = true;
       score++;
     }
   }
   pipes = pipes.filter((p) => p.x + PIPE_W > -20);
 
-  if (bird.y - HIT_R < 0 || bird.y + HIT_R > H - GROUND_H) {
+  if (cat.y - HIT_R < 0 || cat.y + HIT_R > H - GROUND_H) {
     return gameOver();
   }
 
   for (const p of pipes) {
-    const inX = bird.x + HIT_R > p.x && bird.x - HIT_R < p.x + PIPE_W;
-    const inTop = bird.y - HIT_R < p.topH;
-    const inBottom = bird.y + HIT_R > p.topH + PIPE_GAP;
+    const inX = cat.x + HIT_R > p.x && cat.x - HIT_R < p.x + PIPE_W;
+    const inTop = cat.y - HIT_R < p.topH;
+    const inBottom = cat.y + HIT_R > p.topH + PIPE_GAP;
     if (inX && (inTop || inBottom)) {
       return gameOver();
     }
@@ -114,7 +117,19 @@ function gameOver() {
   if (score > best) {
     best = score;
     localStorage.setItem("flappy-best", String(best));
+    newRecord = score > 0;
   }
+  top5.push(score);
+  top5.sort((a, b) => b - a);
+  top5 = top5.slice(0, 5);
+  localStorage.setItem("flappy-top5", JSON.stringify(top5));
+}
+
+function medalFor(s) {
+  if (s >= 100) return { label: "Gold", color: "#ffd700" };
+  if (s >= 50) return { label: "Silver", color: "#c0c0c0" };
+  if (s >= 10) return { label: "Bronze", color: "#cd7f32" };
+  return null;
 }
 
 function drawBackground() {
@@ -157,36 +172,85 @@ function drawPipes() {
   }
 }
 
-function drawBird() {
+function drawCat() {
+  const r = cat.r;
   ctx.save();
-  ctx.translate(bird.x, bird.y);
-  ctx.rotate(bird.rot);
-  ctx.fillStyle = "#ffd93b";
-  ctx.strokeStyle = "#d9a400";
-  ctx.lineWidth = 2.5;
+  ctx.translate(cat.x, cat.y);
+  ctx.rotate(cat.rot);
+
+  ctx.fillStyle = "#3a3a3a";
   ctx.beginPath();
-  ctx.arc(0, 0, bird.r, 0, Math.PI * 2);
+  ctx.ellipse(-r - 2, 2, 5, 3, -0.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#fff";
+  ctx.strokeStyle = "#b9b9b9";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
   ctx.fill();
   ctx.stroke();
+
+  ctx.fillStyle = "#e8823c";
+  ctx.beginPath();
+  ctx.moveTo(-r + 2, -r + 4);
+  ctx.lineTo(-r + 7, -r - 6);
+  ctx.lineTo(-r + 12, -r + 2);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(r - 2, -r + 4);
+  ctx.lineTo(r - 7, -r - 6);
+  ctx.lineTo(r - 12, -r + 2);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = "#3a3a3a";
+  ctx.beginPath();
+  ctx.moveTo(-r + 3, -r + 3);
+  ctx.lineTo(-r + 6, -r - 4);
+  ctx.lineTo(-r + 10, -r + 1);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(r - 3, -r + 3);
+  ctx.lineTo(r - 6, -r - 4);
+  ctx.lineTo(r - 10, -r + 1);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = "#e8823c";
+  ctx.beginPath();
+  ctx.arc(-6, -2, 6.5, Math.PI * 0.15, Math.PI * 0.95);
+  ctx.arc(6, -2, 6.5, Math.PI * 1.05, Math.PI * 1.85);
+  ctx.closePath();
+  ctx.fill();
+
   ctx.fillStyle = "#fff";
   ctx.beginPath();
-  ctx.arc(5, -4, 5, 0, Math.PI * 2);
+  ctx.arc(5, -3, 5, 0, Math.PI * 2);
   ctx.fill();
   ctx.fillStyle = "#222";
   ctx.beginPath();
-  ctx.arc(6.5, -4, 2.2, 0, Math.PI * 2);
+  ctx.arc(6.5, -3, 2.2, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "#ff8c42";
+
+  ctx.fillStyle = "#ff9db4";
   ctx.beginPath();
-  ctx.moveTo(bird.r - 2, 0);
-  ctx.lineTo(bird.r + 8, 3);
-  ctx.lineTo(bird.r - 2, 7);
+  ctx.moveTo(-2, 3);
+  ctx.lineTo(2, 3);
+  ctx.lineTo(0, 6);
   ctx.closePath();
   ctx.fill();
-  ctx.fillStyle = "#f0b429";
-  ctx.beginPath();
-  ctx.ellipse(-4, 4, 7, 4.5, -0.4, 0, Math.PI * 2);
-  ctx.fill();
+
+  ctx.strokeStyle = "#999";
+  ctx.lineWidth = 1;
+  for (const [sx, sy] of [[-8, 3], [-9, 6], [8, 3], [9, 6]]) {
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.lineTo(sx + (sx < 0 ? -5 : 5), sy + 1);
+    ctx.stroke();
+  }
   ctx.restore();
 }
 
@@ -203,20 +267,31 @@ function drawText(txt, y, size, color) {
 function draw() {
   drawBackground();
   drawPipes();
-  drawBird();
+  drawCat();
 
   if (state === "playing") {
     drawText(String(score), 70, 40, "#fff");
   } else if (state === "ready") {
-    drawText("FLAPPY", H / 2 - 60, 42, "#fff");
-    drawText("Tap to start", H / 2 + 10, 20, "#fff");
-    drawText(`Best: ${best}`, H / 2 + 44, 18, "#fff");
+    drawText("FLAPPY CAT", H / 2 - 90, 40, "#fff");
+    drawText("Tap to start", H / 2 - 20, 20, "#fff");
+    drawLeaderboard(H / 2 + 10);
   } else if (state === "over") {
-    drawText("Game Over", H / 2 - 40, 36, "#fff");
-    drawText(`Score: ${score}`, H / 2, 22, "#fff");
-    drawText(`Best: ${best}`, H / 2 + 30, 20, "#ffe066");
-    drawText("Tap to retry", H / 2 + 70, 18, "#fff");
+    drawText("Game Over", H / 2 - 110, 34, "#fff");
+    drawText(`Score: ${score}`, H / 2 - 70, 24, "#fff");
+    if (newRecord) drawText("New best!", H / 2 - 42, 18, "#ffe066");
+    const m = medalFor(score);
+    if (m) drawText(`${m.label} medal!`, H / 2 - 16, 20, m.color);
+    drawLeaderboard(H / 2 + 16);
+    drawText("Tap to retry", H - GROUND_H - 24, 18, "#fff");
   }
+}
+
+function drawLeaderboard(y) {
+  drawText("Top 5", y, 18, "#fff");
+  const rows = top5.length ? top5 : [0, 0, 0, 0, 0];
+  rows.slice(0, 5).forEach((s, i) => {
+    drawText(`${i + 1}. ${s}`, y + 24 + i * 20, 15, i === 0 ? "#ffe066" : "#fff");
+  });
 }
 
 function loop() {
