@@ -11,6 +11,8 @@ const PIPE_W = 64;
 const PIPE_GAP = 150;
 const PIPE_SPACING = 220;
 const PIPE_SPEED = 2.4;
+const MAX_SPEED = 4.2;
+const MIN_GAP = 118;
 
 const cat = { x: 90, y: H / 2, r: 14, vy: 0, rot: 0 };
 const HIT_R = cat.r - 3;
@@ -39,10 +41,19 @@ function reset() {
   spawnPipe(W + 240);
 }
 
+function currentSpeed() {
+  return Math.min(PIPE_SPEED + score * 0.06, MAX_SPEED);
+}
+
+function currentGap() {
+  return Math.max(PIPE_GAP - score * 1.2, MIN_GAP);
+}
+
 function spawnPipe(x) {
   const margin = 60;
-  const topH = margin + Math.random() * (H - GROUND_H - PIPE_GAP - margin * 2);
-  pipes.push({ x, topH, scored: false });
+  const gap = currentGap();
+  const topH = margin + Math.random() * (H - GROUND_H - gap - margin * 2);
+  pipes.push({ x, topH, gap, scored: false });
 }
 
 function flap() {
@@ -89,8 +100,9 @@ function update() {
     spawnPipe(lastPipe ? lastPipe.x + PIPE_SPACING : W + 40);
   }
 
+  const speed = currentSpeed();
   for (const p of pipes) {
-    p.x -= PIPE_SPEED;
+    p.x -= speed;
     if (!p.scored && p.x + PIPE_W < cat.x) {
       p.scored = true;
       score++;
@@ -105,7 +117,7 @@ function update() {
   for (const p of pipes) {
     const inX = cat.x + HIT_R > p.x && cat.x - HIT_R < p.x + PIPE_W;
     const inTop = cat.y - HIT_R < p.topH;
-    const inBottom = cat.y + HIT_R > p.topH + PIPE_GAP;
+    const inBottom = cat.y + HIT_R > p.topH + p.gap;
     if (inX && (inTop || inBottom)) {
       return gameOver();
     }
@@ -156,7 +168,7 @@ function drawBackground() {
 
 function drawPipes() {
   for (const p of pipes) {
-    const bottomY = p.topH + PIPE_GAP;
+    const bottomY = p.topH + p.gap;
     ctx.fillStyle = "#5fb84f";
     ctx.strokeStyle = "#3e7d33";
     ctx.lineWidth = 3;
